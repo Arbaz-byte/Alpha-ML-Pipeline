@@ -11,10 +11,10 @@
 given a full feature set $F = \{f_1, f_2, \dots, f_n\}$, a wrapper method searches for the subset $S \subseteq F$ that maximizes a model's cross-validated performance:
 
 $$
-S^* = \underset{S \subseteq F,\ S \neq \emptyset}{\arg\max} \ \text{CV\_Score}\big(\mathcal{M}(S)\big)
+S^* = \underset{S \subseteq F,\ S \neq \emptyset}{\arg\max} \ \text{CV}\_\text{Score}(\mathcal{M}(S))
 $$
 
-where $\mathcal{M}(S)$ denotes the model trained using only the features in $S$, and $\text{CV\_Score}$ is a cross-validated metric ($R^2$, accuracy, ROC-AUC, etc.).
+where $\mathcal{M}(S)$ denotes the model trained using only the features in $S$, and `CV_Score` is a cross-validated metric ($R^2$, accuracy, ROC-AUC, etc.).
 
 The search space is the **power set** of $F$ — $2^n - 1$ non-empty candidate subsets — which is why every wrapper method is really a different strategy for searching that space without paying the full $2^n$ cost every time.
 
@@ -29,7 +29,7 @@ The search space is the **power set** of $F$ — $2^n - 1$ non-empty candidate s
 **What it does:** evaluates literally every non-empty subset of $F$ and keeps the one with the best cross-validated score. This is the direct, brute-force solution to the formal objective above — no approximation.
 
 $$
-S^*_{\text{EFS}} = \underset{S \in \mathcal{P}(F) \setminus \{\emptyset\}}{\arg\max} \ \text{CV\_Score}(S), \qquad |\mathcal{P}(F) \setminus \{\emptyset\}| = 2^n - 1
+S^*_{\text{EFS}} = \underset{S \in \mathcal{P}(F) \setminus \{\emptyset\}}{\arg\max} \ \text{CV}\_\text{Score}(S), \qquad |\mathcal{P}(F) \setminus \{\emptyset\}| = 2^n - 1
 $$
 
 **Time complexity:** $O(2^n \cdot T_{\text{fit}})$, where $T_{\text{fit}}$ is the cost of one cross-validated model fit. Guaranteed optimal; only tractable for small $n$ (roughly $n \leq 15$–$20$ in practice).
@@ -39,7 +39,7 @@ $$
 **What it does:** starts from an empty set and greedily adds, one at a time, whichever remaining feature improves the score the most.
 
 $$
-S_0 = \emptyset, \qquad S_{k+1} = S_k \cup \left\{ \underset{f \in F \setminus S_k}{\arg\max} \ \text{CV\_Score}(S_k \cup \{f\}) \right\}
+S_0 = \emptyset, \qquad S_{k+1} = S_k \cup \{ \underset{f \in F \setminus S_k}{\arg\max} \ \text{CV}\_\text{Score}(S_k \cup \{f\}) \}
 $$
 
 Run to completion, this produces a full path from $|S|=1$ to $|S|=n$, and the best point along that path (or the smallest point within one standard error of the best — see Section 5) is the final answer.
@@ -51,7 +51,7 @@ Run to completion, this produces a full path from $|S|=1$ to $|S|=n$, and the be
 **What it does:** the mirror image of forward selection — start with every feature, and at each step remove whichever single feature costs the least when dropped.
 
 $$
-S_0 = F, \qquad S_{k+1} = S_k \setminus \left\{ \underset{f \in S_k}{\arg\max} \ \text{CV\_Score}(S_k \setminus \{f\}) \right\}
+S_0 = F, \qquad S_{k+1} = S_k \setminus \{ \underset{f \in S_k}{\arg\max} \ \text{CV}\_\text{Score}(S_k \setminus \{f\}) \}
 $$
 
 **Time complexity:** identical to forward, $O(n^2 \cdot T_{\text{fit}})$, for the same summed-round reason. The key structural difference from forward is *when* it commits to a decision: backward always decides while seeing the full remaining feature context; forward decides while seeing only what it's already built up.
@@ -65,14 +65,12 @@ c_i = |w_i| \ \text{(linear models)} \quad \text{or} \quad c_i = \text{importanc
 $$
 
 $$
-S_{k+1} = S_k \setminus \left\{ \underset{i \in S_k}{\arg\min} \ c_i \right\}
+S_{k+1} = S_k \setminus \{ \underset{i \in S_k}{\arg\min} \ c_i \}
 $$
 
 **Time complexity:** $O(n \cdot T_{\text{fit}})$ — one fit per round, $n$ rounds total, no inner loop over candidates. This is the structural reason it's cheaper than forward/backward: it never tests whether removing a *different* feature would have scored better, it trusts the model's own ranking instead.
 
 
-01_Exhaustive_Feature_Selection.ipynb	03_Backward_Feature_Elimination.ipynb
-02_Forward_Feature_selection.ipynb	04_Recursive_Feature_Elimination.ipynb
 ---
 
 ## 3. Notebooks Built
